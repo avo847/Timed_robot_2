@@ -50,7 +50,7 @@ public class Robot extends TimedRobot {
   private double leftEncoderReading;
   private double rightEncoderReading;
   private double robotHeading;
-
+  
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -70,9 +70,9 @@ public class Robot extends TimedRobot {
     //rightMotorGroup = new MotorControllerGroup(rightMotorControllerCIM1, rightMotorControllerCIM2);
     */
     
-    // replace deprecated motor controller code
+    // replaced deprecated motor controller code
     leftMotorControllerCIM2.follow(leftMotorControllerCIM1);
-    leftMotorControllerCIM1.setInverted(false);
+    leftMotorControllerCIM1.setInverted(true); // invert 
     leftMotorControllerCIM2.setInverted(InvertType.FollowMaster);
     //leftMotorControllerCIM2.setInverted(InvertType.OppositeMaster);
     
@@ -185,9 +185,13 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    double leftX = gamepadDrive.getLeftX()*0.5; // from left controller
-    double leftY = gamepadDrive.getLeftY()*1.0;
+    double leftX = gamepadDrive.getLeftX()*0.5; // from controller left stick
+    double leftY = gamepadDrive.getLeftY()*0.5; // half speed for testing
+    //m_myRobot.arcadeDrive(-leftY, -leftX); // reversed inputs due to coord sys orientation//double leftX = gamepadDrive.getLeftX()*1.0; // from left controller
+    //double leftY = -gamepadDrive.getLeftY()*1.0;
+    //double rightY = gamepadDrive.getRightY() * 1.0; // didnt register for some reason
     m_myRobot.arcadeDrive(-leftY, -leftX); // reversed inputs due to coord sys orientation
+    //m_myRobot.tankDrive(leftY, rightY);
   }
 
   /** This function is called once when the robot is disabled. */
@@ -213,8 +217,5 @@ public class Robot extends TimedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {
-    double leftX = gamepadDrive.getLeftX()*1.0; // from left controller
-    double leftY = gamepadDrive.getLeftY()*1.0;
-    m_myRobot.arcadeDrive(-leftY, -leftX); // reversed inputs due to coord sys orientation
   }
 }
