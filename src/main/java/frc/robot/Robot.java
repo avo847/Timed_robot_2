@@ -4,15 +4,16 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.wpilibj.PowerDistribution;
 //import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 //import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.ctre.phoenix.motorcontrol.*;
 import com.ctre.phoenix.motorcontrol.can.*;
@@ -30,8 +31,12 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   private DifferentialDrive m_myRobot; // drive base
+
+  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
+  private final SlewRateLimiter m_rotRateLimiter = new SlewRateLimiter(3);
+
   private final PowerDistribution m_pdp = new PowerDistribution(); //check CAN bus ID for PDP
-  //private final PowerDistribution m_pdp = new PowerDistribution(0, ModuleType.kCTRE);
+  //private final PowerDistribution m_pdp = new PowerDistribution(0, ModuleType.kCTRE); // non-default ID
 
   private PS4Controller gamepadDrive;
 
@@ -60,15 +65,6 @@ public class Robot extends TimedRobot {
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
 
-    // motor port initialization - 
-    /* 
-    leftMotorControllerCIM1 = new WPI_TalonSRX(10);
-    leftMotorControllerCIM2 = new WPI_VictorSPX(7);
-    //leftMotorGroup = new MotorControllerGroup(leftMotorControllerCIM1, leftMotorControllerCIM2);
-    rightMotorControllerCIM1 = new WPI_TalonSRX(2);
-    rightMotorControllerCIM2 = new WPI_TalonSRX(3);
-    //rightMotorGroup = new MotorControllerGroup(rightMotorControllerCIM1, rightMotorControllerCIM2);
-    */
     
     // replaced deprecated motor controller code
     leftMotorControllerCIM2.follow(leftMotorControllerCIM1);
@@ -185,12 +181,11 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    double leftX = gamepadDrive.getLeftX()*0.5; // from controller left stick
-    double leftY = gamepadDrive.getLeftY()*0.5; // half speed for testing
-    //m_myRobot.arcadeDrive(-leftY, -leftX); // reversed inputs due to coord sys orientation//double leftX = gamepadDrive.getLeftX()*1.0; // from left controller
+    double speed = -m_speedLimiter.calculate(gamepadDrive.getLeftY());
+    double rot = -m_rotRateLimiter.calculate(gamepadDrive.getLeftX())*0.5;
     //double leftY = -gamepadDrive.getLeftY()*1.0;
     //double rightY = gamepadDrive.getRightY() * 1.0; // didnt register for some reason
-    m_myRobot.arcadeDrive(-leftY, -leftX); // reversed inputs due to coord sys orientation
+    m_myRobot.arcadeDrive(speed, rot); 
     //m_myRobot.tankDrive(leftY, rightY);
   }
 
